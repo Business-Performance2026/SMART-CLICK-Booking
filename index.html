@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMART CLICK</title>
+
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#14A89C" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SMART CLICK" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/3.4.3/tailwind.min.js"></script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+const { useState, useEffect, useMemo } = React;
+
+// ---------- Inline SVG icons (lucide-style, stroke-based) ----------
+const IconBase = ({ children, size = 18, ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    {children}
+  </svg>
+);
+
+const Calendar = (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></IconBase>;
+const Users = (p) => <IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
+const Briefcase = (p) => <IconBase {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></IconBase>;
+const LayoutDashboard = (p) => <IconBase {...p}><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></IconBase>;
+const Plus = (p) => <IconBase {...p}><path d="M5 12h14M12 5v14"/></IconBase>;
+const X = (p) => <IconBase {...p}><path d="M18 6 6 18M6 6l12 12"/></IconBase>;
+const Trash2 = (p) => <IconBase {...p}><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></IconBase>;
+const Edit2 = (p) => <IconBase {...p}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>;
+const MessageCircle = (p) => <IconBase {...p}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></IconBase>;
+const Bell = (p) => <IconBase {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></IconBase>;
+const FileDown = (p) => <IconBase {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/></IconBase>;
+const CheckCircle2 = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></IconBase>;
+const PhoneOff = (p) => <IconBase {...p}><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/><line x1="22" y1="2" x2="2" y2="22"/></IconBase>;
+const XCircle = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></IconBase>;
+const CalendarClock = (p) => <IconBase {...p}><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="18" cy="18" r="4"/><path d="M18 16.5v1.5l1 1"/></IconBase>;
+
+
+
+// ---------- Logo ----------
+const LOGO_BASE64 = "./logo.png";
+
+// ---------- Oman Governorates and Wilayats ----------
+const OMAN_REGIONS = {
+  "مسقط": ["مسقط", "مطرح", "بوشر", "السيب", "العامرات", "قريات"],
+  "ظفار": ["صلالة", "طاقة", "مرباط", "ضلكوت", "رخيوت", "ثمريت", "سدح", "مقشن", "شليم وجزر الحلانيات", "محوت", "مدينة الحق"],
+  "مسندم": ["خصب", "بخا", "دبا", "مدحاء"],
+  "البريمي": ["البريمي", "محضة", "السنينة"],
+  "الداخلية": ["نزوى", "بهلاء", "منح", "الحمراء", "أدم", "إزكي", "سمائل", "بدبد"],
+  "شمال الباطنة": ["صحار", "شناص", "لوى", "صحم", "الخابورة", "السويق"],
+  "جنوب الباطنة": ["الرستاق", "العوابي", "نخل", "وادي المعاول", "بركاء", "المصنعة"],
+  "جنوب الشرقية": ["صور", "الكامل والوافي", "جعلان بني بو علي", "جعلان بني بو حسن", "مصيرة"],
+  "شمال الشرقية": ["إبراء", "المضيبي", "بدية", "القابل", "وادي بني خالد", "دماء والطائيين"],
+  "الظاهرة": ["عبري", "ينقل", "ضنك"],
+  "الوسطى": ["هيما", "محوت", "الدقم", "الجازر"],
+};
+const GOVERNORATES = Object.keys(OMAN_REGIONS);
+
+// ---------- Booking Statuses ----------
+const STATUSES = {
+  confirmed: { label: "مؤكد", color: "#14A89C", bg: "#E1F5F3", icon: CheckCircle2 },
+  completed: { label: "مكتمل", color: "#2D8A4E", bg: "#E3F4E8", icon: CheckCircle2 },
+  no_response: { label: "لم يرد", color: "#B8761F", bg: "#FBF1DE", icon: PhoneOff },
+  cancelled: { label: "ألغي", color: "#A85751", bg: "#F5E6E4", icon: XCircle },
+  rescheduled: { label: "تغيير موعد", color: "#5C7A99", bg: "#E8EEF3", icon: CalendarClock },
+};
+const STATUS_ORDER = ["confirmed", "completed", "no_response", "cancelled", "rescheduled"];
+
+// ---------- Helpers ----------
+const uid = () => Math.random().toString(36).slice(2, 10);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const addDays = (dateStr, days) => {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const SERVICE_COLORS = ["#14A89C", "#E8A23D", "#A85751", "#5C7A99", "#7A8B5C"];
+
+const toWhatsappLink = (phone) => {
+  let p = (phone || "").replace(/[^\d]/g, "");
+  if (p.startsWith("0")) p = p.slice(1);
+  if (p.length === 8) p = "968" + p;
+  return `https://wa.me/${p}`;
+};
+
+const seedServices = [
+  { id: uid(), name: "كشف عام" },
+  { id: uid(), name: "صيانة" },
+  { id: uid(), name: "متابعة" },
+];
+
+const seedCustomers = [];
+
+function useLocalState(key, initial) {
+  const [state, setState] = React.useState(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : initial;
+    } catch {
+      return initial;
+    }
+  });
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch {}
+  }, [key, state]);
+  return [state, setState];
+}
+
+// ---------- PDF Generation (loads jsPDF from CDN) ----------
+let jsPDFPromise = null;
+function loadJsPDF() {
+  if (jsPDFPromise) return jsPDFPromise;
+  jsPDFPromise = new Promise((resolve, reject) => {
+    if (window.jspdf) return resolve(window.jspdf.jsPDF);
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    script.onload = () => resolve(window.jspdf.jsPDF);
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return jsPDFPromise;
+}
+
+async function getLogoBase64() {
+  try {
+    const res = await fetch(LOGO_BASE64);
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function generateBookingPDF(booking, customer, service) {
+  const jsPDF = await loadJsPDF();
+  const doc = new jsPDF();
+
+  // Header band
+  doc.setFillColor(20, 168, 156);
+  doc.rect(0, 0, 210, 28, "F");
+
+  const logoData = await getLogoBase64();
+  if (logoData) {
+    try {
+      doc.addImage(logoData, "PNG", 10, 4, 20, 19);
+    } catch (e) {}
+  }
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.text("SMART CLICK", 35, 13);
+  doc.setFontSize(10);
+  doc.text("تأكيد الحجز / Booking Confirmation", 35, 21);
+
+  doc.setTextColor(40, 40, 40);
+  let y = 42;
+  const line = (label, value) => {
+    doc.setFontSize(11);
+    doc.setFont(undefined, "bold");
+    doc.text(label, 200, y, { align: "right" });
+    doc.setFont(undefined, "normal");
+    doc.text(String(value || "-"), 140, y, { align: "right" });
+    y += 10;
+  };
+
+  doc.setFontSize(13);
+  doc.setFont(undefined, "bold");
+  doc.text("Booking Details", 200, y, { align: "right" });
+  y += 12;
+
+  line("Customer Name:", customer?.name);
+  line("Phone:", customer?.phone);
+  line("Governorate:", customer?.governorate);
+  line("Wilayat:", customer?.wilayat);
+  if (customer?.area) line("Area:", customer.area);
+  line("Service:", service?.name);
+  line("Date:", booking.date);
+  line("Time:", booking.time);
+  if (booking.invoiceNumber) line("Invoice No:", booking.invoiceNumber);
+  line("Status:", STATUSES[booking.status]?.label);
+  if (booking.notes) {
+    doc.setFont(undefined, "bold");
+    doc.text("Notes:", 200, y, { align: "right" });
+    y += 8;
+    doc.setFont(undefined, "normal");
+    const split = doc.splitTextToSize(booking.notes, 180);
+    doc.text(split, 200, y, { align: "right" });
+    y += split.length * 6;
+  }
+
+  y += 10;
+  doc.setDrawColor(220, 220, 220);
+  doc.line(10, y, 200, y);
+  y += 8;
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text("SMART CLICK - Smart Booking Management", 105, y, { align: "center" });
+
+  doc.save(`booking-${customer?.name || "customer"}-${booking.date}.pdf`);
+}
+
+// ---------- Main App ----------
+function App() {
+  const [tab, setTab] = React.useState("dashboard");
+  const [services, setServices] = useLocalState("biz_services", seedServices);
+  const [customers, setCustomers] = useLocalState("biz_customers", seedCustomers);
+  const [bookings, setBookings] = useLocalState("biz_bookings", []);
+  const [bookingsFilter, setBookingsFilter] = React.useState(null); // status filter to apply when navigating from dashboard
+
+  const serviceMap = React.useMemo(() => {
+    const m = {};
+    services.forEach((s) => (m[s.id] = s));
+    return m;
+  }, [services]);
+
+  const customerMap = React.useMemo(() => {
+    const m = {};
+    customers.forEach((c) => (m[c.id] = c));
+    return m;
+  }, [customers]);
+
+  const navItems = [
+    { id: "dashboard", label: "الرئيسية", icon: LayoutDashboard },
+    { id: "bookings", label: "حجز موعد", icon: Calendar },
+    { id: "customers", label: "العملاء", icon: Users },
+    { id: "services", label: "الخدمات", icon: Briefcase },
+  ];
+
+  const goToBookingsWithStatus = (status) => {
+    setBookingsFilter(status);
+    setTab("bookings");
+  };
+
+  return (
+    <div dir="rtl" className="min-h-screen flex" style={{ background: "#FAF8F5", color: "#2B2B2B", fontFamily: "'Inter', sans-serif" }}>
+      <aside className="w-48 sm:w-60 shrink-0 border-l flex flex-col" style={{ borderColor: "#E5E0D8", background: "#FFFFFF" }}>
+        <div className="px-3 sm:px-5 py-4 sm:py-6 flex items-center gap-2 sm:gap-3">
+          <img src={LOGO_BASE64} alt="SMART CLICK" style={{ width: 36, height: 36, objectFit: "contain" }} className="sm:!w-11 sm:!h-11" />
+          <div>
+            <h1 className="text-base sm:text-xl font-bold tracking-wide" style={{ fontFamily: "'Fraunces', serif", color: "#14A89C" }}>
+              SMART CLICK
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: "#9B9388" }}>إدارة المواعيد</p>
+          </div>
+        </div>
+        <nav className="flex-1 px-3 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setTab(item.id);
+                  if (item.id === "bookings") setBookingsFilter(null);
+                }}
+                className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm transition-colors"
+                style={{
+                  background: active ? "#14A89C" : "transparent",
+                  color: active ? "#FFFFFF" : "#5A5346",
+                  fontWeight: active ? 600 : 500,
+                }}
+              >
+                <Icon size={18} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs" style={{ color: "#C4BCAE" }}>
+          البيانات محفوظة محلياً في متصفحك
+        </div>
+      </aside>
+
+      <main className="flex-1 p-3 sm:p-8 overflow-y-auto" style={{ maxHeight: "100vh" }}>
+        {tab === "dashboard" && (
+          <Dashboard
+            bookings={bookings}
+            customers={customers}
+            services={services}
+            serviceMap={serviceMap}
+            customerMap={customerMap}
+            setTab={setTab}
+            goToBookingsWithStatus={goToBookingsWithStatus}
+          />
+        )}
+        {tab === "bookings" && (
+          <BookingsView
+            bookings={bookings}
+            setBookings={setBookings}
+            customers={customers}
+            setCustomers={setCustomers}
+            services={services}
+            serviceMap={serviceMap}
+            customerMap={customerMap}
+            initialStatusFilter={bookingsFilter}
+          />
+        )}
+        {tab === "customers" && <CustomersView customers={customers} setCustomers={setCustomers} bookings={bookings} />}
+        {tab === "services" && <ServicesView services={services} setServices={setServices} />}
+      </main>
+    </div>
+  );
+}
+
+function PageHeader({ title, subtitle, action }) {
+  return (
+    <div className="flex items-start justify-between mb-6">
+      <div>
+        <h2 className="text-xl sm:text-3xl font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
+          {title}
+        </h2>
+        {subtitle && <p className="text-sm mt-1" style={{ color: "#9B9388" }}>{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+// ---------- Dashboard ----------
+function Dashboard({ bookings, customers, services, serviceMap, customerMap, setTab, goToBookingsWithStatus }) {
+  const today = todayISO();
+  const in2days = addDays(today, 2);
+
+  const todaysBookings = bookings.filter((b) => b.date === today).sort((a, b) => a.time.localeCompare(b.time));
+
+  const reminders = bookings
+    .filter((b) => b.date >= today && b.date <= in2days)
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+  const upcoming = bookings
+    .filter((b) => b.date >= today)
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+    .slice(0, 6);
+
+  const statusCounts = {};
+  STATUS_ORDER.forEach((s) => (statusCounts[s] = 0));
+  bookings.forEach((b) => {
+    const s = b.status || "confirmed";
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+
+  const dayLabel = (date) => {
+    if (date === today) return "اليوم";
+    if (date === addDays(today, 1)) return "غداً";
+    if (date === addDays(today, 2)) return "بعد غد";
+    return date;
+  };
+
+  return (
+    <div>
+      <PageHeader title="مرحباً بك" subtitle={`اليوم ${today}`} />
+
+      {/* Top general stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <div className="rounded-xl p-5 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <div className="text-xl sm:text-2xl font-bold" style={{ color: "#14A89C", fontFamily: "'Fraunces', serif" }}>
+            {todaysBookings.length}
+          </div>
+          <div className="text-sm mt-1" style={{ color: "#9B9388" }}>مواعيد اليوم</div>
+        </div>
+        <div className="rounded-xl p-5 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <div className="text-xl sm:text-2xl font-bold" style={{ color: "#5C7A99", fontFamily: "'Fraunces', serif" }}>
+            {customers.length}
+          </div>
+          <div className="text-sm mt-1" style={{ color: "#9B9388" }}>إجمالي العملاء</div>
+        </div>
+        <div className="rounded-xl p-5 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <div className="text-xl sm:text-2xl font-bold" style={{ color: "#A85751", fontFamily: "'Fraunces', serif" }}>
+            {bookings.length}
+          </div>
+          <div className="text-sm mt-1" style={{ color: "#9B9388" }}>إجمالي الحجوزات</div>
+        </div>
+      </div>
+
+      {/* Status cards - clickable */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        {STATUS_ORDER.map((statusKey) => {
+          const st = STATUSES[statusKey];
+          const Icon = st.icon;
+          return (
+            <button
+              key={statusKey}
+              onClick={() => goToBookingsWithStatus(statusKey)}
+              className="rounded-xl p-4 border text-right transition-transform hover:-translate-y-0.5"
+              style={{ background: st.bg, borderColor: "#E5E0D8" }}
+            >
+              <Icon size={18} style={{ color: st.color }} />
+              <div className="text-lg sm:text-2xl font-bold mt-2" style={{ color: st.color, fontFamily: "'Fraunces', serif" }}>
+                {statusCounts[statusKey]}
+              </div>
+              <div className="text-xs mt-1 font-medium" style={{ color: st.color }}>{st.label}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {reminders.length > 0 && (
+        <div className="rounded-xl p-5 border mb-6" style={{ background: "#FBF1DE", borderColor: "#F0DDB8" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Bell size={18} style={{ color: "#B8761F" }} />
+            <h3 className="font-bold" style={{ fontFamily: "'Fraunces', serif", color: "#B8761F" }}>
+              تذكيرات: مواعيد خلال يومين
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {reminders.map((b) => (
+              <ReminderRow key={b.id} booking={b} serviceMap={serviceMap} customerMap={customerMap} dayLabel={dayLabel} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="rounded-xl p-5 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Fraunces', serif" }}>مواعيد اليوم</h3>
+          {todaysBookings.length === 0 ? (
+            <p className="text-sm" style={{ color: "#C4BCAE" }}>لا توجد مواعيد اليوم.</p>
+          ) : (
+            <div className="space-y-2">
+              {todaysBookings.map((b) => (
+                <BookingRow key={b.id} booking={b} serviceMap={serviceMap} customerMap={customerMap} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl p-5 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Fraunces', serif" }}>المواعيد القادمة</h3>
+          {upcoming.length === 0 ? (
+            <p className="text-sm" style={{ color: "#C4BCAE" }}>
+              لا توجد مواعيد قادمة.{" "}
+              <button onClick={() => setTab("bookings")} style={{ color: "#14A89C", textDecoration: "underline" }}>
+                أضف حجزاً جديداً
+              </button>
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {upcoming.map((b) => (
+                <BookingRow key={b.id} booking={b} serviceMap={serviceMap} customerMap={customerMap} showDate />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReminderRow({ booking, serviceMap, customerMap, dayLabel }) {
+  const service = serviceMap[booking.serviceId];
+  const customer = customerMap[booking.customerId];
+  return (
+    <div className="flex items-center gap-3 p-2.5 rounded-lg" style={{ background: "#FFFFFF" }}>
+      <div className="text-xs font-bold px-2 py-1 rounded-md" style={{ background: "#F5E6C8", color: "#B8761F", minWidth: "56px", textAlign: "center" }}>
+        {dayLabel(booking.date)}
+      </div>
+      <div className="flex-1">
+        <div className="text-sm font-semibold">{customer?.name || "عميل غير معروف"}</div>
+        <div className="text-xs" style={{ color: "#9B9388" }}>
+          {service?.name || "—"} · الساعة {booking.time}
+          {customer?.wilayat ? ` · ${customer.wilayat}` : ""}
+        </div>
+      </div>
+      {customer?.phone && (
+        <a href={toWhatsappLink(customer.phone)} target="_blank" rel="noreferrer" className="p-2 rounded-lg" style={{ background: "#E1F5F3", color: "#14A89C" }}>
+          <MessageCircle size={16} />
+        </a>
+      )}
+    </div>
+  );
+}
+
+function BookingRow({ booking, serviceMap, customerMap, showDate }) {
+  const service = serviceMap[booking.serviceId];
+  const customer = customerMap[booking.customerId];
+  const colorIdx = Object.keys(serviceMap).indexOf(booking.serviceId) % SERVICE_COLORS.length;
+  const status = STATUSES[booking.status || "confirmed"];
+  return (
+    <div className="flex items-center gap-3 p-2.5 rounded-lg" style={{ background: "#FAF8F5" }}>
+      <div className="w-1.5 h-10 rounded-full" style={{ background: SERVICE_COLORS[colorIdx] || "#14A89C" }} />
+      <div className="flex-1">
+        <div className="text-sm font-semibold">{customer?.name || "عميل"}</div>
+        <div className="text-xs" style={{ color: "#9B9388" }}>
+          {service?.name || "—"} {showDate ? `· ${booking.date}` : ""} · {booking.time}
+        </div>
+      </div>
+      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: status.bg, color: status.color }}>
+        {status.label}
+      </span>
+    </div>
+  );
+}
+
+// ---------- Bookings View ----------
+function BookingsView({ bookings, setBookings, customers, setCustomers, services, serviceMap, customerMap, initialStatusFilter }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [editing, setEditing] = React.useState(null);
+  const [filterDate, setFilterDate] = React.useState("");
+  const [filterStatus, setFilterStatus] = React.useState(initialStatusFilter || "");
+
+  React.useEffect(() => {
+    if (initialStatusFilter) setFilterStatus(initialStatusFilter);
+  }, [initialStatusFilter]);
+
+  const filtered = bookings
+    .filter((b) => !filterDate || b.date === filterDate)
+    .filter((b) => !filterStatus || (b.status || "confirmed") === filterStatus)
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+  const handleSave = (data, customerData) => {
+    let customerId = data.customerId;
+
+    if (customerData) {
+      if (customerId) {
+        setCustomers(customers.map((c) => (c.id === customerId ? { ...c, ...customerData } : c)));
+      } else {
+        customerId = uid();
+        setCustomers([...customers, { id: customerId, ...customerData }]);
+      }
+    }
+
+    const bookingData = { ...data, customerId };
+
+    if (editing) {
+      setBookings(bookings.map((b) => (b.id === editing.id ? { ...b, ...bookingData } : b)));
+    } else {
+      setBookings([...bookings, { id: uid(), ...bookingData }]);
+    }
+    setShowForm(false);
+    setEditing(null);
+  };
+
+  const handleDelete = (id) => setBookings(bookings.filter((b) => b.id !== id));
+
+  const handleExportPDF = (b) => {
+    const customer = customerMap[b.customerId];
+    const service = serviceMap[b.serviceId];
+    generateBookingPDF(b, customer, service);
+  };
+
+  return (
+    <div>
+      <PageHeader
+        title="حجز موعد"
+        subtitle="إدارة مواعيد العملاء"
+        action={
+          <button
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+            style={{ background: "#14A89C" }}
+          >
+            <Plus size={16} /> حجز جديد
+          </button>
+        }
+      />
+
+      <div className="mb-4 flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <label className="text-sm" style={{ color: "#9B9388" }}>التاريخ:</label>
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="px-3 py-1.5 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+          {filterDate && (
+            <button onClick={() => setFilterDate("")} className="text-sm" style={{ color: "#14A89C" }}>
+              مسح
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm" style={{ color: "#9B9388" }}>الحالة:</label>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-1.5 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          >
+            <option value="">الكل</option>
+            {STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {STATUSES[s].label}
+              </option>
+            ))}
+          </select>
+          {filterStatus && (
+            <button onClick={() => setFilterStatus("")} className="text-sm" style={{ color: "#14A89C" }}>
+              مسح
+            </button>
+          )}
+        </div>
+      </div>
+
+      {services.length === 0 ? (
+        <div className="rounded-xl p-5 border text-sm" style={{ background: "#FFFFFF", borderColor: "#E5E0D8", color: "#9B9388" }}>
+          أضف خدمة واحدة على الأقل من قسم الخدمات قبل إنشاء حجز.
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl p-4 sm:p-8 border text-center text-sm" style={{ background: "#FFFFFF", borderColor: "#E5E0D8", color: "#C4BCAE" }}>
+          لا توجد حجوزات مطابقة.
+        </div>
+      ) : (
+        <div className="rounded-xl border overflow-x-auto" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+          <table className="w-full text-sm" style={{ minWidth: "780px" }}>
+            <thead>
+              <tr style={{ background: "#FAF8F5", color: "#9B9388" }}>
+                <th className="text-right px-4 py-3 font-medium">التاريخ</th>
+                <th className="text-right px-4 py-3 font-medium">الوقت</th>
+                <th className="text-right px-4 py-3 font-medium">الزبون</th>
+                <th className="text-right px-4 py-3 font-medium">الهاتف</th>
+                <th className="text-right px-4 py-3 font-medium">الخدمة</th>
+                <th className="text-right px-4 py-3 font-medium">الموقع</th>
+                <th className="text-right px-4 py-3 font-medium">الفاتورة</th>
+                <th className="text-right px-4 py-3 font-medium">الحالة</th>
+                <th className="text-right px-4 py-3 font-medium">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((b) => {
+                const customer = customerMap[b.customerId];
+                const status = STATUSES[b.status || "confirmed"];
+                return (
+                  <tr key={b.id} className="border-t" style={{ borderColor: "#F0EBE3" }}>
+                    <td className="px-4 py-3">{b.date}</td>
+                    <td className="px-4 py-3">{b.time}</td>
+                    <td className="px-4 py-3">{customer?.name || "—"}</td>
+                    <td className="px-4 py-3">
+                      {customer?.phone ? (
+                        <a href={toWhatsappLink(customer.phone)} target="_blank" rel="noreferrer" className="flex items-center gap-1" style={{ color: "#14A89C" }}>
+                          <MessageCircle size={14} /> {customer.phone}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-3">{serviceMap[b.serviceId]?.name || "—"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {customer?.governorate ? `${customer.governorate} - ${customer.wilayat || ""}${customer.area ? " - " + customer.area : ""}` : "—"}
+                    </td>
+                    <td className="px-4 py-3">{b.invoiceNumber || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: status.bg, color: status.color }}>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleExportPDF(b)}
+                          title="تصدير PDF"
+                          style={{ color: "#14A89C" }}
+                        >
+                          <FileDown size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditing(b);
+                            setShowForm(true);
+                          }}
+                          style={{ color: "#5C7A99" }}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(b.id)} style={{ color: "#A85751" }}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showForm && (
+        <BookingForm
+          customers={customers}
+          services={services}
+          initial={editing}
+          onSave={handleSave}
+          onClose={() => {
+            setShowForm(false);
+            setEditing(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function BookingForm({ customers, services, initial, onSave, onClose }) {
+  const initialCustomer = initial ? customers.find((c) => c.id === initial.customerId) : null;
+
+  const [form, setForm] = React.useState(
+    initial
+      ? { ...initial, status: initial.status || "confirmed" }
+      : {
+          customerId: "",
+          serviceId: services[0]?.id || "",
+          date: todayISO(),
+          time: "09:00",
+          invoiceNumber: "",
+          notes: "",
+          status: "confirmed",
+        }
+  );
+
+  const [customerName, setCustomerName] = React.useState(initialCustomer?.name || "");
+  const [customerPhone, setCustomerPhone] = React.useState(initialCustomer?.phone || "");
+  const [governorate, setGovernorate] = React.useState(initialCustomer?.governorate || "");
+  const [wilayat, setWilayat] = React.useState(initialCustomer?.wilayat || "");
+  const [area, setArea] = React.useState(initialCustomer?.area || "");
+
+  const handleSelectCustomer = (id) => {
+    setForm({ ...form, customerId: id });
+    if (id) {
+      const c = customers.find((x) => x.id === id);
+      if (c) {
+        setCustomerName(c.name || "");
+        setCustomerPhone(c.phone || "");
+        setGovernorate(c.governorate || "");
+        setWilayat(c.wilayat || "");
+        setArea(c.area || "");
+      }
+    }
+  };
+
+  const wilayatOptions = governorate ? OMAN_REGIONS[governorate] || [] : [];
+
+  const canSave = customerName.trim() && form.serviceId && form.date && form.time;
+
+  const handleSubmit = () => {
+    const customerData = {
+      name: customerName.trim(),
+      phone: customerPhone.trim(),
+      governorate,
+      wilayat,
+      area: area.trim(),
+      notes: initialCustomer?.notes || "",
+    };
+    onSave(form, customerData);
+  };
+
+  return (
+    <Modal title={initial ? "تعديل الحجز" : "حجز جديد"} onClose={onClose} wide>
+      <div className="space-y-4">
+        {customers.length > 0 && (
+          <Field label="اختر عميل موجود (اختياري)">
+            <select
+              value={form.customerId}
+              onChange={(e) => handleSelectCustomer(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            >
+              <option value="">— عميل جديد —</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.phone})
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="اسم الزبون">
+            <input
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+          <Field label="رقم الهاتف">
+            <input
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="9xxxxxxx"
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="المحافظة">
+            <select
+              value={governorate}
+              onChange={(e) => {
+                setGovernorate(e.target.value);
+                setWilayat("");
+              }}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            >
+              <option value="">— اختر —</option>
+              {GOVERNORATES.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="الولاية">
+            <select
+              value={wilayat}
+              onChange={(e) => setWilayat(e.target.value)}
+              disabled={!governorate}
+              className="w-full px-3 py-2 rounded-lg border text-sm disabled:opacity-50"
+              style={{ borderColor: "#E5E0D8" }}
+            >
+              <option value="">— اختر —</option>
+              {wilayatOptions.map((w) => (
+                <option key={w} value={w}>
+                  {w}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="المنطقة">
+            <input
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              placeholder="اكتب المنطقة"
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+        </div>
+
+        <Field label="نوع الخدمة">
+          <select
+            value={form.serviceId}
+            onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          >
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="تاريخ الموعد">
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+          <Field label="الوقت">
+            <input
+              type="time"
+              value={form.time}
+              onChange={(e) => setForm({ ...form, time: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+        </div>
+
+        <Field label="حالة الحجز">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {STATUS_ORDER.map((s) => {
+              const st = STATUSES[s];
+              const active = form.status === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm({ ...form, status: s })}
+                  className="px-2 py-2 rounded-lg text-xs font-medium border transition-all"
+                  style={{
+                    background: active ? st.color : st.bg,
+                    color: active ? "#FFFFFF" : st.color,
+                    borderColor: active ? st.color : "transparent",
+                  }}
+                >
+                  {st.label}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+
+        <Field label="رقم الفاتورة (اختياري)">
+          <input
+            value={form.invoiceNumber}
+            onChange={(e) => setForm({ ...form, invoiceNumber: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+        </Field>
+
+        <Field label="ملاحظات">
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+        </Field>
+
+        <button
+          disabled={!canSave}
+          onClick={handleSubmit}
+          className="w-full py-2.5 rounded-lg text-white font-semibold text-sm disabled:opacity-50"
+          style={{ background: "#14A89C" }}
+        >
+          حفظ
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- Customers View ----------
+function CustomersView({ customers, setCustomers, bookings }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [editing, setEditing] = React.useState(null);
+
+  const handleSave = (data) => {
+    if (editing) {
+      setCustomers(customers.map((c) => (c.id === editing.id ? { ...c, ...data } : c)));
+    } else {
+      setCustomers([...customers, { id: uid(), ...data }]);
+    }
+    setShowForm(false);
+    setEditing(null);
+  };
+
+  const handleDelete = (id) => {
+    setCustomers(customers.filter((c) => c.id !== id));
+  };
+
+  const wilayatOptionsFor = (gov) => (gov ? OMAN_REGIONS[gov] || [] : []);
+
+  return (
+    <div>
+      <PageHeader
+        title="العملاء"
+        subtitle="قائمة عملائك وبياناتهم"
+        action={
+          <button
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+            style={{ background: "#14A89C" }}
+          >
+            <Plus size={16} /> عميل جديد
+          </button>
+        }
+      />
+
+      {customers.length === 0 ? (
+        <div className="rounded-xl p-4 sm:p-8 border text-center text-sm" style={{ background: "#FFFFFF", borderColor: "#E5E0D8", color: "#C4BCAE" }}>
+          لا يوجد عملاء بعد. اضغط "عميل جديد" للبدء.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {customers.map((c) => {
+            const count = bookings.filter((b) => b.customerId === c.id).length;
+            return (
+              <div key={c.id} className="rounded-xl p-4 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-bold">{c.name}</div>
+                    {c.phone && (
+                      <a href={toWhatsappLink(c.phone)} target="_blank" rel="noreferrer" className="text-sm flex items-center gap-1 mt-0.5" style={{ color: "#14A89C" }}>
+                        <MessageCircle size={13} /> {c.phone}
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditing(c);
+                        setShowForm(true);
+                      }}
+                      style={{ color: "#5C7A99" }}
+                    >
+                      <Edit2 size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(c.id)} style={{ color: "#A85751" }}>
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+                {(c.governorate || c.wilayat || c.area) && (
+                  <div className="text-xs mt-2" style={{ color: "#9B9388" }}>
+                    {c.governorate} {c.wilayat ? `- ${c.wilayat}` : ""} {c.area ? `- ${c.area}` : ""}
+                  </div>
+                )}
+                {c.notes && <p className="text-xs mt-2" style={{ color: "#9B9388" }}>{c.notes}</p>}
+                <div className="text-xs mt-3 px-2 py-1 rounded-full inline-block" style={{ background: "#E1F5F3", color: "#14A89C" }}>
+                  {count} حجز
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showForm && (
+        <CustomerForm
+          initial={editing}
+          onSave={handleSave}
+          onClose={() => {
+            setShowForm(false);
+            setEditing(null);
+          }}
+          wilayatOptionsFor={wilayatOptionsFor}
+        />
+      )}
+    </div>
+  );
+}
+
+function CustomerForm({ initial, onSave, onClose, wilayatOptionsFor }) {
+  const [form, setForm] = React.useState(
+    initial || { name: "", phone: "", governorate: "", wilayat: "", area: "", notes: "" }
+  );
+
+  return (
+    <Modal title={initial ? "تعديل العميل" : "عميل جديد"} onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="الاسم">
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+        </Field>
+        <Field label="رقم الهاتف">
+          <input
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="9xxxxxxx"
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+        </Field>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="المحافظة">
+            <select
+              value={form.governorate}
+              onChange={(e) => setForm({ ...form, governorate: e.target.value, wilayat: "" })}
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            >
+              <option value="">— اختر —</option>
+              {GOVERNORATES.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="الولاية">
+            <select
+              value={form.wilayat}
+              onChange={(e) => setForm({ ...form, wilayat: e.target.value })}
+              disabled={!form.governorate}
+              className="w-full px-3 py-2 rounded-lg border text-sm disabled:opacity-50"
+              style={{ borderColor: "#E5E0D8" }}
+            >
+              <option value="">— اختر —</option>
+              {wilayatOptionsFor(form.governorate).map((w) => (
+                <option key={w} value={w}>
+                  {w}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="المنطقة">
+            <input
+              value={form.area || ""}
+              onChange={(e) => setForm({ ...form, area: e.target.value })}
+              placeholder="اكتب المنطقة"
+              className="w-full px-3 py-2 rounded-lg border text-sm"
+              style={{ borderColor: "#E5E0D8" }}
+            />
+          </Field>
+        </div>
+        <Field label="ملاحظات">
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+            rows={2}
+          />
+        </Field>
+        <button
+          disabled={!form.name.trim()}
+          onClick={() => onSave(form)}
+          className="w-full py-2.5 rounded-lg text-white font-semibold text-sm disabled:opacity-50"
+          style={{ background: "#14A89C" }}
+        >
+          حفظ
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- Services View ----------
+function ServicesView({ services, setServices }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [editing, setEditing] = React.useState(null);
+
+  const handleSave = (data) => {
+    if (editing) {
+      setServices(services.map((s) => (s.id === editing.id ? { ...s, ...data } : s)));
+    } else {
+      setServices([...services, { id: uid(), ...data }]);
+    }
+    setShowForm(false);
+    setEditing(null);
+  };
+
+  const handleDelete = (id) => setServices(services.filter((s) => s.id !== id));
+
+  return (
+    <div>
+      <PageHeader
+        title="الخدمات"
+        subtitle="أنواع الخدمات اللي بتقدمها"
+        action={
+          <button
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+            style={{ background: "#14A89C" }}
+          >
+            <Plus size={16} /> خدمة جديدة
+          </button>
+        }
+      />
+
+      {services.length === 0 ? (
+        <div className="rounded-xl p-4 sm:p-8 border text-center text-sm" style={{ background: "#FFFFFF", borderColor: "#E5E0D8", color: "#C4BCAE" }}>
+          لا توجد خدمات بعد. اضغط "خدمة جديدة" للبدء.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {services.map((s, i) => (
+            <div key={s.id} className="rounded-xl p-4 border" style={{ background: "#FFFFFF", borderColor: "#E5E0D8" }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="w-2 h-2 rounded-full mb-2" style={{ background: SERVICE_COLORS[i % SERVICE_COLORS.length] }} />
+                  <div className="font-bold">{s.name}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditing(s);
+                      setShowForm(true);
+                    }}
+                    style={{ color: "#5C7A99" }}
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                  <button onClick={() => handleDelete(s.id)} style={{ color: "#A85751" }}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm && (
+        <ServiceForm
+          initial={editing}
+          onSave={handleSave}
+          onClose={() => {
+            setShowForm(false);
+            setEditing(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ServiceForm({ initial, onSave, onClose }) {
+  const [form, setForm] = React.useState(initial || { name: "" });
+  return (
+    <Modal title={initial ? "تعديل الخدمة" : "خدمة جديدة"} onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="اسم الخدمة">
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border text-sm"
+            style={{ borderColor: "#E5E0D8" }}
+          />
+        </Field>
+        <button
+          disabled={!form.name.trim()}
+          onClick={() => onSave(form)}
+          className="w-full py-2.5 rounded-lg text-white font-semibold text-sm disabled:opacity-50"
+          style={{ background: "#14A89C" }}
+        >
+          حفظ
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- Shared UI ----------
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: "#5A5346" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children, wide }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: "rgba(43,43,43,0.4)" }}>
+      <div
+        className={`rounded-2xl p-6 w-full ${wide ? "max-w-xl" : "max-w-md"} max-h-[90vh] overflow-y-auto`}
+        style={{ background: "#FFFFFF" }}
+        dir="rtl"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
+            {title}
+          </h3>
+          <button onClick={onClose} style={{ color: "#9B9388" }}>
+            <X size={20} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
