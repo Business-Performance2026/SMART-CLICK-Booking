@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>SMART CLICK</title>
 
   <link rel="icon" type="image/png" href="./icon-192.png" />
@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-title" content="SMART CLICK" />
 
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/3.4.3/tailwind.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -23,7 +23,8 @@
 
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Inter', sans-serif; }
+    html, body { margin: 0; overflow-x: hidden; width: 100%; }
+    body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
 <body>
@@ -299,7 +300,7 @@ function App() {
         </div>
       </aside>
 
-      <main className="flex-1 p-3 sm:p-8 overflow-y-auto" style={{ maxHeight: "100vh" }}>
+      <main className="flex-1 min-w-0 p-3 sm:p-8 overflow-y-auto" style={{ maxHeight: "100vh" }}>
         {tab === "dashboard" && (
           <Dashboard
             bookings={bookings}
