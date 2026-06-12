@@ -151,24 +151,7 @@ function useFirestoreCollection(collectionName, initial) {
       const fb = window.__firebase;
       if (!fb) return;
       const colRef = fb.collection(fb.db, collectionName);
-      unsub = fb.onSnapshot(colRef, async (snap) => {
-        if (snap.empty && !seededRef.current && initial.length > 0) {
-          seededRef.current = true;
-          // Check persistent flag to avoid re-seeding after user deleted everything
-          const metaRef = fb.doc(fb.db, "_meta", collectionName + "_seeded");
-          const metaSnap = await fb.getDocs(fb.collection(fb.db, "_meta")).catch(() => null);
-          const alreadySeeded = metaSnap && metaSnap.docs.some((d) => d.id === collectionName + "_seeded");
-          if (!alreadySeeded) {
-            const batch = fb.writeBatch(fb.db);
-            initial.forEach((item) => {
-              batch.set(fb.doc(fb.db, collectionName, item.id), item);
-            });
-            batch.set(metaRef, { done: true });
-            await batch.commit();
-          }
-          return;
-        }
-        seededRef.current = true;
+      unsub = fb.onSnapshot(colRef, (snap) => {
         const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         if (!cancelled) {
           setState(items);
