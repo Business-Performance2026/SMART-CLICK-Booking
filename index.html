@@ -21,6 +21,31 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot, writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6to6vOGxzX-ZFB0Q_S8p_ZD7kq-f_11Q",
+      authDomain: "smart-click-booking.firebaseapp.com",
+      databaseURL: "https://smart-click-booking-default-rtdb.firebaseio.com",
+      projectId: "smart-click-booking",
+      storageBucket: "smart-click-booking.firebasestorage.app",
+      messagingSenderId: "115710219976",
+      appId: "1:115710219976:web:999bd102fef1a7338577fd"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db = getFirestore(fbApp);
+
+    // Expose to global scope for use inside Babel-transpiled script below
+    window.__firebase = { db, collection, doc, getDocs, setDoc, deleteDoc, onSnapshot, writeBatch };
+    window.__firebaseReady = true;
+    window.dispatchEvent(new Event("firebase-ready"));
+  </script>
+
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; overflow-x: hidden; width: 100%; }
@@ -112,21 +137,85 @@ const seedServices = [
 
 const seedCustomers = [];
 
-function useLocalState(key, initial) {
-  const [state, setState] = React.useState(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : initial;
-    } catch {
-      return initial;
-    }
-  });
+function useFirestoreCollection(collectionName, initial) {
+  const [state, setState] = React.useState(initial);
+  const [ready, setReady] = React.useState(false);
+  const stateRef = React.useRef(state);
+  stateRef.current = state;
+
   React.useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(state));
-    } catch {}
-  }, [key, state]);
-  return [state, setState];
+    let unsub = null;
+    let cancelled = false;
+
+    function start() {
+      const fb = window.__firebase;
+      if (!fb) return;
+      const colRef = fb.collection(fb.db, collectionName);
+      unsub = fb.onSnapshot(colRef, async (snap) => {
+        if (snap.empty && !ready && initial.length > 0) {
+          // Seed initial data on first run if collection is empty
+          const batch = fb.writeBatch(fb.db);
+          initial.forEach((item) => {
+            batch.set(fb.doc(fb.db, collectionName, item.id), item);
+          });
+          await batch.commit();
+          return; // onSnapshot will fire again with the seeded data
+        }
+        const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        if (!cancelled) {
+          setState(items);
+          setReady(true);
+        }
+      });
+    }
+
+    if (window.__firebaseReady) {
+      start();
+    } else {
+      window.addEventListener("firebase-ready", start, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      if (unsub) unsub();
+    };
+  }, [collectionName]);
+
+  // setItems mirrors useState API but syncs diffs to Firestore
+  const setItems = React.useCallback((updater) => {
+    const prev = stateRef.current;
+    const next = typeof updater === "function" ? updater(prev) : updater;
+
+    const fb = window.__firebase;
+    if (!fb) {
+      setState(next);
+      return;
+    }
+
+    const prevIds = new Set(prev.map((i) => i.id));
+    const nextIds = new Set(next.map((i) => i.id));
+
+    // Deletions
+    prev.forEach((item) => {
+      if (!nextIds.has(item.id)) {
+        fb.deleteDoc(fb.doc(fb.db, collectionName, item.id)).catch(() => {});
+      }
+    });
+
+    // Additions / updates
+    next.forEach((item) => {
+      const prevItem = prev.find((p) => p.id === item.id);
+      if (!prevItem || JSON.stringify(prevItem) !== JSON.stringify(item)) {
+        const { id, ...data } = item;
+        fb.setDoc(fb.doc(fb.db, collectionName, id), data).catch(() => {});
+      }
+    });
+
+    // Optimistic local update; onSnapshot will reconcile
+    setState(next);
+  }, [collectionName]);
+
+  return [state, setItems];
 }
 
 // ---------- PDF Generation (loads jsPDF from CDN) ----------
@@ -230,9 +319,9 @@ async function generateBookingPDF(booking, customer, service) {
 // ---------- Main App ----------
 function App() {
   const [tab, setTab] = React.useState("dashboard");
-  const [services, setServices] = useLocalState("biz_services", seedServices);
-  const [customers, setCustomers] = useLocalState("biz_customers", seedCustomers);
-  const [bookings, setBookings] = useLocalState("biz_bookings", []);
+  const [services, setServices] = useFirestoreCollection("services", seedServices);
+  const [customers, setCustomers] = useFirestoreCollection("customers", seedCustomers);
+  const [bookings, setBookings] = useFirestoreCollection("bookings", []);
   const [bookingsFilter, setBookingsFilter] = React.useState(null); // status filter to apply when navigating from dashboard
 
   const serviceMap = React.useMemo(() => {
@@ -296,7 +385,7 @@ function App() {
           })}
         </nav>
         <div className="px-3 sm:px-5 py-3 sm:py-4 text-[10px] sm:text-xs" style={{ color: "#C4BCAE" }}>
-          البيانات محفوظة محلياً في متصفحك
+          البيانات متزامنة عبر السحابة ☁️
         </div>
       </aside>
 
